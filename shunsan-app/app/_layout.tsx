@@ -53,6 +53,8 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="loan-calculator" />
+        <Stack.Screen name="calculation-history" />
       </Stack>
     </>
   );
