@@ -14,6 +14,10 @@ import {
   TextInput,
   Modal,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
@@ -37,6 +41,28 @@ import {
   LOAN_TERM_PRESETS,
   STEP_VALUES,
 } from '@/types/calculator';
+
+// 諸経費の計算式を取得
+function getExpenseFormula(name: string, propertyPrice: number, loanAmount: number, isNew: boolean): string {
+  const priceYen = propertyPrice * 10000;
+  const loanYen = loanAmount * 10000;
+
+  switch (name) {
+    case '仲介手数料':
+      if (isNew) return '新築物件のため不要';
+      return `${formatCurrency(propertyPrice)}万円 × 3% + 6万円) × 1.1`;
+    case '登記費用':
+      return `${formatCurrency(propertyPrice)}万円 × 0.7%（概算）`;
+    case '印紙代':
+      return '売買契約書 + 金消契約書';
+    case 'ローン事務手数料':
+      return `${formatCurrency(loanAmount)}万円 × 2.2%`;
+    case '火災保険':
+      return '10年一括払い（概算）';
+    default:
+      return '';
+  }
+}
 
 export default function LoanCalculatorScreen() {
   const [activeTab, setActiveTab] = useState<CalculatorTab>('loan');
@@ -336,19 +362,42 @@ export default function LoanCalculatorScreen() {
               </View>
             </View>
 
+            {/* 計算条件の表示 */}
+            <View style={styles.expenseConditions}>
+              <Text style={styles.expenseConditionsTitle}>計算条件</Text>
+              <Text style={styles.expenseConditionsText}>
+                物件価格: {formatCurrency(propertyPrice)}万円 / 借入額: {formatCurrency(loanResult.loanAmount)}万円
+              </Text>
+            </View>
+
             {/* 諸経費内訳 */}
             <View style={styles.expenseList}>
               {expenseResult.breakdown.map((item, index) => (
                 <View key={index} style={styles.expenseItem}>
-                  <View>
+                  <View style={styles.expenseItemLeft}>
                     <Text style={styles.expenseName}>{item.name}</Text>
                     <Text style={styles.expenseDescription}>{item.description}</Text>
+                    {/* 詳細な計算根拠 */}
+                    <Text style={styles.expenseFormula}>
+                      {getExpenseFormula(item.name, propertyPrice, loanResult.loanAmount, isNewConstruction)}
+                    </Text>
                   </View>
                   <Text style={styles.expenseAmount}>
                     ¥{formatCurrency(item.amount)}
                   </Text>
                 </View>
               ))}
+            </View>
+
+            {/* 注意事項 */}
+            <View style={styles.expenseNote}>
+              <Text style={styles.expenseNoteTitle}>※ 注意事項</Text>
+              <Text style={styles.expenseNoteText}>
+                • 上記は概算です。実際の金額は物件や金融機関により異なります{'\n'}
+                • 仲介手数料は売主直売の場合は不要です{'\n'}
+                • 登記費用は司法書士報酬を含む概算です{'\n'}
+                • 火災保険は建物構造・補償内容により変動します
+              </Text>
             </View>
           </View>
         )}
@@ -446,59 +495,75 @@ export default function LoanCalculatorScreen() {
         animationType="fade"
         onRequestClose={() => setShowSaveModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>計算結果を保存</Text>
-
-            <View style={styles.modalInputGroup}>
-              <Text style={styles.modalLabel}>物件名 *</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={propertyName}
-                onChangeText={setPropertyName}
-                placeholder="例: 〇〇マンション 3LDK"
-                placeholderTextColor={Colors.light.textTertiary}
-              />
-            </View>
-
-            <View style={styles.modalInputGroup}>
-              <Text style={styles.modalLabel}>メモ（任意）</Text>
-              <TextInput
-                style={[styles.modalInput, styles.modalTextArea]}
-                value={note}
-                onChangeText={setNote}
-                placeholder="メモを入力..."
-                placeholderTextColor={Colors.light.textTertiary}
-                multiline
-                numberOfLines={3}
-              />
-            </View>
-
-            <View style={styles.modalSummary}>
-              <Text style={styles.modalSummaryText}>
-                物件価格: {formatCurrency(propertyPrice)}万円
-              </Text>
-              <Text style={styles.modalSummaryText}>
-                月々返済: ¥{formatCurrency(loanResult.monthlyPayment)}
-              </Text>
-            </View>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => setShowSaveModal(false)}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalOverlay}>
+              <ScrollView
+                contentContainerStyle={styles.modalScrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.modalCancelText}>キャンセル</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalSaveButton}
-                onPress={handleSave}
-              >
-                <Text style={styles.modalSaveText}>保存</Text>
-              </TouchableOpacity>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>計算結果を保存</Text>
+
+                  <View style={styles.modalInputGroup}>
+                    <Text style={styles.modalLabel}>物件名 *</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      value={propertyName}
+                      onChangeText={setPropertyName}
+                      placeholder="例: 〇〇マンション 3LDK"
+                      placeholderTextColor={Colors.light.textTertiary}
+                      returnKeyType="next"
+                    />
+                  </View>
+
+                  <View style={styles.modalInputGroup}>
+                    <Text style={styles.modalLabel}>メモ（任意）</Text>
+                    <TextInput
+                      style={[styles.modalInput, styles.modalTextArea]}
+                      value={note}
+                      onChangeText={setNote}
+                      placeholder="メモを入力..."
+                      placeholderTextColor={Colors.light.textTertiary}
+                      multiline
+                      numberOfLines={3}
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                    />
+                  </View>
+
+                  <View style={styles.modalSummary}>
+                    <Text style={styles.modalSummaryText}>
+                      物件価格: {formatCurrency(propertyPrice)}万円
+                    </Text>
+                    <Text style={styles.modalSummaryText}>
+                      月々返済: ¥{formatCurrency(loanResult.monthlyPayment)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.modalButtons}>
+                    <TouchableOpacity
+                      style={styles.modalCancelButton}
+                      onPress={() => setShowSaveModal(false)}
+                    >
+                      <Text style={styles.modalCancelText}>キャンセル</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.modalSaveButton}
+                      onPress={handleSave}
+                    >
+                      <Text style={styles.modalSaveText}>保存</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </ScrollView>
             </View>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -515,27 +580,69 @@ interface InputRowProps {
 }
 
 function InputRow({ label, value, unit, decimals = 0, onAdjust, onChange }: InputRowProps) {
+  const [inputText, setInputText] = React.useState(
+    decimals > 0 ? value.toFixed(decimals) : value.toString()
+  );
+
+  // valueが外部から変更された場合に同期
+  React.useEffect(() => {
+    setInputText(decimals > 0 ? value.toFixed(decimals) : value.toString());
+  }, [value, decimals]);
+
+  const handleChangeText = (text: string) => {
+    // 空文字、数字、小数点のみ許可
+    const cleaned = text.replace(/[^0-9.]/g, '');
+    setInputText(cleaned);
+
+    const num = parseFloat(cleaned);
+    if (!isNaN(num) && num >= 0) {
+      onChange(num);
+    }
+  };
+
+  const handleBlur = () => {
+    // フォーカスが外れたときに値を整形
+    const num = parseFloat(inputText);
+    if (isNaN(num) || num < 0) {
+      setInputText(decimals > 0 ? value.toFixed(decimals) : value.toString());
+    } else {
+      setInputText(decimals > 0 ? num.toFixed(decimals) : num.toString());
+      onChange(num);
+    }
+  };
+
   return (
     <View style={styles.inputRow}>
       <Text style={styles.inputLabel}>{label}</Text>
       <View style={styles.inputControls}>
-        <TouchableOpacity style={styles.adjustButton} onPress={() => onAdjust('down')}>
+        <TouchableOpacity
+          style={styles.adjustButton}
+          onPress={() => onAdjust('down')}
+          activeOpacity={0.6}
+        >
           <Text style={styles.adjustButtonText}>−</Text>
         </TouchableOpacity>
-        <View style={styles.inputWrapper}>
+        <TouchableOpacity
+          style={styles.inputWrapper}
+          activeOpacity={1}
+        >
           <TextInput
             style={styles.input}
-            value={decimals > 0 ? value.toFixed(decimals) : value.toString()}
-            onChangeText={(text) => {
-              const num = parseFloat(text);
-              if (!isNaN(num)) onChange(num);
-            }}
+            value={inputText}
+            onChangeText={handleChangeText}
+            onBlur={handleBlur}
             keyboardType="decimal-pad"
             selectTextOnFocus
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
           <Text style={styles.inputUnit}>{unit}</Text>
-        </View>
-        <TouchableOpacity style={styles.adjustButton} onPress={() => onAdjust('up')}>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.adjustButton}
+          onPress={() => onAdjust('up')}
+          activeOpacity={0.6}
+        >
           <Text style={styles.adjustButtonText}>+</Text>
         </TouchableOpacity>
       </View>
@@ -703,23 +810,25 @@ const styles = StyleSheet.create({
   presetContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Layout.spacing.xs,
-    marginBottom: Layout.spacing.md,
+    gap: Layout.spacing.sm,
+    marginBottom: Layout.spacing.lg,
   },
   presetButton: {
-    paddingHorizontal: Layout.spacing.sm,
-    paddingVertical: Layout.spacing.xs,
-    borderRadius: Layout.borderRadius.sm,
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: Layout.spacing.sm,
+    borderRadius: Layout.borderRadius.md,
     backgroundColor: Colors.light.backgroundLight,
     borderWidth: 1,
     borderColor: Colors.light.border,
+    minWidth: 80,
+    alignItems: 'center',
   },
   presetButtonActive: {
     backgroundColor: Colors.light.primary,
     borderColor: Colors.light.primary,
   },
   presetText: {
-    fontSize: Layout.fontSize.xs,
+    fontSize: Layout.fontSize.md,
     color: Colors.light.textSecondary,
   },
   presetTextActive: {
@@ -755,16 +864,36 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: Layout.fontWeight.bold,
   },
+  expenseConditions: {
+    backgroundColor: Colors.light.primary + '10',
+    padding: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.md,
+    marginBottom: Layout.spacing.md,
+  },
+  expenseConditionsTitle: {
+    fontSize: Layout.fontSize.sm,
+    fontWeight: Layout.fontWeight.semibold,
+    color: Colors.light.primary,
+    marginBottom: 4,
+  },
+  expenseConditionsText: {
+    fontSize: Layout.fontSize.sm,
+    color: Colors.light.textSecondary,
+  },
   expenseList: {
     gap: Layout.spacing.sm,
   },
   expenseItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     padding: Layout.spacing.md,
     backgroundColor: Colors.light.backgroundLight,
     borderRadius: Layout.borderRadius.md,
+  },
+  expenseItemLeft: {
+    flex: 1,
+    marginRight: Layout.spacing.md,
   },
   expenseName: {
     fontSize: Layout.fontSize.md,
@@ -772,14 +901,39 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
   },
   expenseDescription: {
+    fontSize: Layout.fontSize.sm,
+    color: Colors.light.textSecondary,
+    marginTop: 2,
+  },
+  expenseFormula: {
     fontSize: Layout.fontSize.xs,
     color: Colors.light.textTertiary,
-    marginTop: 2,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   expenseAmount: {
     fontSize: Layout.fontSize.lg,
     fontWeight: Layout.fontWeight.bold,
     color: Colors.light.text,
+  },
+  expenseNote: {
+    marginTop: Layout.spacing.lg,
+    padding: Layout.spacing.md,
+    backgroundColor: Colors.light.backgroundLight,
+    borderRadius: Layout.borderRadius.md,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.light.warning,
+  },
+  expenseNoteTitle: {
+    fontSize: Layout.fontSize.sm,
+    fontWeight: Layout.fontWeight.semibold,
+    color: Colors.light.warning,
+    marginBottom: 8,
+  },
+  expenseNoteText: {
+    fontSize: Layout.fontSize.sm,
+    color: Colors.light.textSecondary,
+    lineHeight: 20,
   },
   conversionResult: {
     gap: Layout.spacing.sm,
@@ -851,7 +1005,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
     padding: 20,
+    width: '100%',
   },
   modalContent: {
     width: '100%',
@@ -859,6 +1018,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
     borderRadius: 16,
     padding: 24,
+    alignSelf: 'center',
   },
   modalTitle: {
     fontSize: 20,
