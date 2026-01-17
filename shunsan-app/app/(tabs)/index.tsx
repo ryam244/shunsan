@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
+import { Layout, Typography } from '@/constants/Layout';
 
 /**
  * Home Screen (Phase 1-3: 計算機能版)
@@ -89,45 +90,47 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: Layout.spacing.lg,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: Layout.spacing.xl,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
+    width: 88,
+    height: 88,
     backgroundColor: Colors.light.primary,
-    borderRadius: 20,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Layout.spacing.md,
   },
   icon: {
-    fontSize: 40,
+    fontSize: 44,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '800',
+    fontSize: Layout.fontSize.largeTitle,
+    fontWeight: Layout.fontWeight.heavy,
     color: Colors.light.text,
+    lineHeight: Layout.lineHeight.largeTitle,
   },
   tagline: {
-    fontSize: 14,
+    fontSize: Layout.fontSize.callout,
     color: Colors.light.textSecondary,
-    marginTop: 4,
+    marginTop: Layout.spacing.xs,
+    lineHeight: Layout.lineHeight.subhead,
   },
   menuContainer: {
-    gap: 12,
-    marginBottom: 32,
+    gap: Layout.spacing.md,
+    marginBottom: Layout.spacing.xl,
   },
   menuButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.backgroundLight,
-    padding: 16,
-    borderRadius: 16,
+    padding: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.lg,
     borderWidth: 1,
     borderColor: Colors.light.border,
   },
@@ -135,65 +138,68 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   menuIconContainer: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
     backgroundColor: Colors.light.primary,
-    borderRadius: 12,
+    borderRadius: Layout.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: Layout.spacing.md,
   },
   menuIconDisabled: {
     backgroundColor: Colors.light.textTertiary,
   },
   menuIcon: {
-    fontSize: 24,
+    fontSize: 26,
   },
   menuTextContainer: {
     flex: 1,
   },
   menuTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: Layout.fontSize.headline,
+    fontWeight: Layout.fontWeight.semibold,
     color: Colors.light.text,
-    marginBottom: 2,
+    marginBottom: 3,
+    lineHeight: Layout.lineHeight.headline,
   },
   menuTitleDisabled: {
     color: Colors.light.textTertiary,
   },
   menuDescription: {
-    fontSize: 12,
+    fontSize: Layout.fontSize.subhead,
     color: Colors.light.textSecondary,
+    lineHeight: Layout.lineHeight.subhead,
   },
   menuArrow: {
-    fontSize: 20,
+    fontSize: Layout.fontSize.title2,
     color: Colors.light.textTertiary,
   },
   statusContainer: {
-    gap: 8,
+    gap: Layout.spacing.sm,
   },
   statusItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: Colors.light.backgroundLight,
-    padding: 12,
-    borderRadius: 10,
+    padding: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.md,
   },
   statusLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: Layout.fontSize.subhead,
+    fontWeight: Layout.fontWeight.medium,
     color: Colors.light.textSecondary,
+    lineHeight: Layout.lineHeight.subhead,
   },
   statusBadge: {
     backgroundColor: Colors.light.success,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
+    paddingHorizontal: Layout.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: Layout.borderRadius.sm,
   },
   statusText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: Layout.fontSize.caption1,
+    fontWeight: Layout.fontWeight.semibold,
     color: '#ffffff',
   },
 });
