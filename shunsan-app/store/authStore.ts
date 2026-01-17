@@ -144,7 +144,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
-      let errorMessage = 'アカウント作成に失敗しました';
+      console.error('SignUp Error:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+
+      let errorMessage = `エラー: ${error.code || 'unknown'}\n${error.message || 'アカウント作成に失敗しました'}`;
 
       switch (error.code) {
         case 'auth/email-already-in-use':
@@ -155,6 +159,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           break;
         case 'auth/weak-password':
           errorMessage = 'パスワードは6文字以上で設定してください';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'ネットワークエラー: インターネット接続を確認してください';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'メール/パスワード認証が無効です。Firebase Consoleで有効化してください';
           break;
       }
 
