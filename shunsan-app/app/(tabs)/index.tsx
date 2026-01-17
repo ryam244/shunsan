@@ -1,11 +1,14 @@
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 
 /**
- * Home Screen (Phase 1-1: 基本版)
- * 起動確認用のシンプルなホーム画面
+ * Home Screen (Phase 1-3: 計算機能版)
+ * メイン画面 - 各機能へのナビゲーション
  */
 export default function HomeScreen() {
+  const router = useRouter();
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -15,24 +18,50 @@ export default function HomeScreen() {
             <Text style={styles.icon}>🏢</Text>
           </View>
           <Text style={styles.title}>瞬算</Text>
+          <Text style={styles.tagline}>不動産営業の計算をサポート</Text>
         </View>
 
-        {/* メッセージ */}
-        <View style={styles.messageContainer}>
-          <Text style={styles.message}>✅ 起動成功！</Text>
-          <Text style={styles.subtitle}>
-            Phase 1-1: 基本プロジェクト構築完了
-          </Text>
-          <Text style={styles.description}>
-            次のステップでFirebase接続と認証機能を追加します。
-          </Text>
+        {/* メイン機能ボタン */}
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => router.push('/loan-calculator')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuIconContainer}>
+              <Text style={styles.menuIcon}>🧮</Text>
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={styles.menuTitle}>住宅ローン計算</Text>
+              <Text style={styles.menuDescription}>
+                月々返済額・諸経費・単価換算
+              </Text>
+            </View>
+            <Text style={styles.menuArrow}>→</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuButton, styles.menuButtonDisabled]}
+            disabled={true}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconContainer, styles.menuIconDisabled]}>
+              <Text style={styles.menuIcon}>📋</Text>
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuTitle, styles.menuTitleDisabled]}>物件管理</Text>
+              <Text style={styles.menuDescription}>
+                Coming Soon
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* ステータス */}
         <View style={styles.statusContainer}>
           <StatusItem label="Expo Router" status="OK" />
           <StatusItem label="TypeScript" status="OK" />
-          <StatusItem label="React Native" status="OK" />
+          <StatusItem label="Firebase" status="Ready" />
         </View>
       </View>
     </SafeAreaView>
@@ -65,7 +94,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
   },
   iconContainer: {
     width: 80,
@@ -84,56 +113,86 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.light.text,
   },
-  messageContainer: {
-    backgroundColor: Colors.light.backgroundLight,
-    padding: 24,
-    borderRadius: 16,
-    marginBottom: 32,
-    alignItems: 'center',
+  tagline: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    marginTop: 4,
   },
-  message: {
+  menuContainer: {
+    gap: 12,
+    marginBottom: 32,
+  },
+  menuButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.backgroundLight,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  menuButtonDisabled: {
+    opacity: 0.6,
+  },
+  menuIconContainer: {
+    width: 48,
+    height: 48,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  menuIconDisabled: {
+    backgroundColor: Colors.light.textTertiary,
+  },
+  menuIcon: {
     fontSize: 24,
+  },
+  menuTextContainer: {
+    flex: 1,
+  },
+  menuTitle: {
+    fontSize: 16,
     fontWeight: '700',
     color: Colors.light.text,
-    marginBottom: 8,
+    marginBottom: 2,
   },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 14,
+  menuTitleDisabled: {
     color: Colors.light.textTertiary,
-    textAlign: 'center',
-    lineHeight: 20,
+  },
+  menuDescription: {
+    fontSize: 12,
+    color: Colors.light.textSecondary,
+  },
+  menuArrow: {
+    fontSize: 20,
+    color: Colors.light.textTertiary,
   },
   statusContainer: {
-    gap: 12,
+    gap: 8,
   },
   statusItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: Colors.light.backgroundLight,
-    padding: 16,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 10,
   },
   statusLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: Colors.light.text,
+    color: Colors.light.textSecondary,
   },
   statusBadge: {
     backgroundColor: Colors.light.success,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#ffffff',
   },
