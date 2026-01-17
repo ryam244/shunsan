@@ -34,7 +34,7 @@ npm install
 
 # 2. 環境変数の設定
 cp .env.example .env
-# .env ファイルを開いて、SupabaseのURLとAPIキーを設定
+# .env ファイルを開いて、FirebaseのAPIキーを設定
 
 # 3. 開発サーバー起動
 npm start
@@ -68,8 +68,8 @@ shunsan-app/
 - [x] タブナビゲーション実装
 - [x] カラーパレット定義
 
-### Phase 1-2: Supabase接続（次）
-- [ ] Supabase Client設定
+### Phase 1-2: Firebase接続（次）
+- [ ] Firebase Client設定
 - [ ] 認証機能実装（Email/Apple ID）
 
 ### Phase 1-3: ローン計算
@@ -83,7 +83,7 @@ shunsan-app/
 - **フレームワーク:** React Native (Expo SDK 52+)
 - **言語:** TypeScript
 - **ルーティング:** Expo Router
-- **バックエンド:** Supabase (PostgreSQL + Auth)
+- **バックエンド:** Firebase (Firestore + Auth + Analytics)
 - **状態管理:** Zustand（Phase 1-2で追加予定）
 
 ---

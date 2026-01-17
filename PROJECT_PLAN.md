@@ -49,13 +49,15 @@
 - **状態管理：** Zustand
 
 ### バックエンド
-- **BaaS：** Supabase
-  - PostgreSQL（データベース）
-  - Auth（認証：Email / Apple ID）
-  - Storage（画像保存）
+- **BaaS：** Firebase
+  - Firestore（NoSQLデータベース）
+  - Firebase Auth（認証：Email / Apple ID / Google）
+  - Firebase Storage（画像保存）
+  - Firebase Analytics（分析・モニタリング）
 
 ### 外部サービス
-- **認証：** Supabase Auth
+- **認証：** Firebase Auth
+- **分析：** Firebase Analytics（統合済み）
 - **課金：** Phase 1.5で実装予定（RevenueCat検討）
 
 ### 開発環境
@@ -71,7 +73,7 @@
 ### 4.1 User（ユーザー）
 ```typescript
 interface User {
-  id: string;                    // UUID (Supabase Auth)
+  id: string;                    // Firebase Auth UID
   email: string;                 // メールアドレス
   display_name?: string;         // 表示名
   company_name?: string;         // 会社名
@@ -192,7 +194,7 @@ shunsan-app/
 │   └── useCalculator.ts        # 計算ロジックフック
 │
 ├── lib/                        # 外部サービス・ユーティリティ
-│   ├── supabase.ts             # Supabase設定
+│   ├── firebase.ts             # Firebase設定
 │   └── calculations.ts         # 計算ロジック
 │
 ├── store/                      # Zustand状態管理
@@ -224,11 +226,13 @@ shunsan-app/
 - [ ] Zustand インストール・設定（Phase 1-2で追加）
 - [x] 基本ディレクトリ構造作成
 
-#### 1.2 Supabase セットアップ
-- [ ] Supabaseプロジェクト作成
-- [ ] データベーステーブル作成（Users, Properties, Settings）
-- [ ] Row Level Security (RLS) ポリシー設定
-- [ ] Supabase Client設定（`lib/supabase.ts`）
+#### 1.2 Firebase セットアップ
+- [ ] Firebaseプロジェクト作成（Firebase Console）
+- [ ] iOSアプリ登録（Bundle ID: com.shunsan.app）
+- [ ] GoogleService-Info.plist取得・配置
+- [ ] Firestoreコレクション設計（users, properties, settings）
+- [ ] Firestore Security Rules設定
+- [ ] Firebase Client設定（`lib/firebase.ts`）
 - [ ] 環境変数設定（`.env`）
 
 #### 1.3 デザインシステム構築
@@ -343,7 +347,7 @@ shunsan-app/
 - [ ] 保存して比較に追加ボタン
 
 #### 5.2 保存機能実装
-- [ ] Supabaseへの保存処理
+- [ ] Firestoreへの保存処理
 - [ ] 物件名入力ダイアログ
 - [ ] 保存成功トースト表示
 - [ ] 物件一覧画面への遷移
@@ -492,9 +496,10 @@ shunsan-app/
 - 月々支払額は四捨五入（円単位）
 - 総支払額は万円単位で表示
 
-### 9.2 Supabase RLS
+### 9.2 Firestore Security Rules
 - ユーザーは自分のデータのみアクセス可能
-- 適切なポリシー設定が必須
+- 適切なセキュリティルール設定が必須
+- 認証済みユーザーのみ読み書き可能に設定
 
 ### 9.3 エラーハンドリング
 - ネットワークエラー時の適切な表示
@@ -530,10 +535,11 @@ shunsan-app/
 - 権限要求（カメラ・ストレージ）の説明を丁寧に
 - TestFlightで事前テスト実施
 
-### リスク2：Supabase無料枠超過
+### リスク2：Firebase無料枠超過
 **対策：**
-- 初期は無料枠で十分（500MB DB、1GB Storage）
-- 超過の可能性がある場合はアラート設定
+- Spark（無料）プランで開始（Firestore 1GB、Storage 5GB）
+- 読み書き回数に注意（1日5万読み取り、2万書き込み）
+- 超過の可能性がある場合はBlaze（従量課金）プランに移行
 
 ### リスク3：計算ロジックのバグ
 **対策：**
@@ -556,4 +562,4 @@ shunsan-app/
 ---
 
 **最終更新日：** 2026-01-16
-**ステータス：** Phase 1-1 完了 - Phase 1-2（Supabase接続）開始待ち
+**ステータス：** Phase 1-1 完了 - Phase 1-2（Firebase接続）開始待ち
