@@ -2,15 +2,15 @@
 
 ## 現在のステータス
 
-**Phase 1 完了** - Expoテスト準備OK
+**Phase 1 完了** - Expo SDK 54 アップグレード完了・テスト準備OK
 
 ---
 
 ## 完了した作業
 
 ### Phase 1-1: 基本プロジェクト構築
-- [x] Expo SDK 52 + TypeScript環境
-- [x] Expo Router（ファイルベースルーティング）
+- [x] Expo SDK 54 + TypeScript環境
+- [x] Expo Router v6（ファイルベースルーティング）
 - [x] タブナビゲーション（4タブ）
 
 ### Phase 1-2: Firebase統合・認証UI
@@ -30,11 +30,13 @@
 - [x] 計算履歴画面
 - [x] 保存モーダル
 
-### その他
-- [x] Apple HIG準拠フォント設定
-- [x] 画面遷移チェック・修正
+### SDK 54アップグレード（2026-01-17）
+- [x] Expo SDK 52 → 54 移行
+- [x] React 19.1 + React Native 0.81.5
+- [x] expo-router v6
+- [x] TypeScript 5.7
 - [x] TypeScriptコンパイル確認
-- [x] iOSバンドルエクスポート確認
+- [x] Expo起動確認
 
 ---
 
@@ -43,17 +45,29 @@
 ### 1. Mac環境での動作確認（最優先）
 ```bash
 cd shunsan-app
-npm install
+npm install --legacy-peer-deps
 npx expo start
 ```
 → iPhoneでExpo GoアプリからQRコード読み取り
+
+**注意**: SDK 54はExpo Go 54.xが必要です（最新のExpo Goで動作確認済み）
 
 ### 2. Firebase Console設定（5分）
 1. https://console.firebase.google.com/ → プロジェクト「shunsan」
 2. **Authentication** → Sign-in method → 「メール/パスワード」有効化
 3. **Firestore Database** → 「データベースを作成」→ テストモードで開始
+4. プロジェクト設定 → マイアプリ → ウェブアプリ → 設定値を`.env`にコピー
 
-### 3. Phase 2: ビルドテスト
+### 3. .envファイルの設定
+現在はプレースホルダー値が設定されています。実際のFirebase設定値に置き換えてください：
+```
+EXPO_PUBLIC_FIREBASE_API_KEY=実際のAPIキー
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=shunsan-27dca.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=shunsan-27dca
+...
+```
+
+### 4. Phase 2: ビルドテスト
 - EAS Build設定
 - Xcodeでのローカルビルド
 - TestFlight配布
@@ -64,10 +78,13 @@ npx expo start
 
 | 項目 | 値 |
 |------|-----|
-| ブランチ | `claude/shunsan-app-planning-tJ56o` |
+| ブランチ | `claude/firebase-expo-setup-YAUyB` |
 | Firebase Project ID | `shunsan-27dca` |
 | Bundle ID | `com.shunsan.app` |
-| Expo SDK | 52 |
+| Expo SDK | **54** |
+| React | 19.1.0 |
+| React Native | 0.81.5 |
+| expo-router | 6.x |
 
 ---
 
@@ -111,13 +128,6 @@ HANDOFF.mdを読んで状況を確認してください。
 - （やりたいこと：動作確認 / Firebase設定 / Xcodeビルド など）
 ```
 
-または簡潔に：
-
-```
-瞬算アプリの続き。HANDOFF.md参照。
-今からMacで動作確認したい。
-```
-
 ---
 
 ## 注意事項
@@ -125,3 +135,4 @@ HANDOFF.mdを読んで状況を確認してください。
 - `.env`ファイルはgitにコミットされていません（セキュリティ）
 - 別環境で作業する場合は`.env.example`を参考に`.env`を作成
 - Firebase未設定でもアプリはオフラインで動作します
+- npm installには`--legacy-peer-deps`フラグを使用してください
