@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
-import { Platform, Text } from 'react-native';
+import { Platform } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 /**
  * Tabs Layout
  * ボトムナビゲーション（4タブ）
+ * Featherアイコン（細い線のシンプルなアイコン）
  */
 export default function TabsLayout() {
   return (
@@ -21,8 +23,8 @@ export default function TabsLayout() {
           paddingTop: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
+          fontSize: 11,
+          fontWeight: '500',
         },
       }}
     >
@@ -30,26 +32,26 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'ホーム',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="home" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="home" size={22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="customers"
         options={{
-          title: '顧客管理',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="group" color={color} />
+          title: '顧客',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="users" size={22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="properties"
         options={{
-          title: '物件検索',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="apartment" color={color} />
+          title: '物件',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="search" size={22} color={color} />
           ),
         }}
       />
@@ -57,31 +59,11 @@ export default function TabsLayout() {
         name="settings"
         options={{
           title: '設定',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="settings" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="settings" size={22} color={color} />
           ),
         }}
       />
     </Tabs>
-  );
-}
-
-/**
- * TabIcon Component
- * Material Symbols アイコンの代替（Phase 1では簡易版）
- */
-function TabIcon({ name, color }: { name: string; color: string }) {
-  // Phase 1-2で Material Symbols に置き換え予定
-  const iconMap: Record<string, string> = {
-    home: '🏠',
-    group: '👥',
-    apartment: '🏢',
-    settings: '⚙️',
-  };
-
-  return (
-    <Text style={{ fontSize: 24 }}>
-      {iconMap[name] || '❓'}
-    </Text>
   );
 }

@@ -3,7 +3,7 @@
  * ローン計算画面（住宅ローン・諸経費・単価換算）
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,8 +18,10 @@ import {
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
+  Animated,
 } from 'react-native';
 import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Button } from '@/components/ui/Button';
@@ -67,11 +69,48 @@ function getExpenseFormula(name: string, propertyPrice: number, loanAmount: numb
 export default function LoanCalculatorScreen() {
   const [activeTab, setActiveTab] = useState<CalculatorTab>('loan');
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [propertyName, setPropertyName] = useState('');
   const [note, setNote] = useState('');
 
+  // 成功モーション用のアニメーション値
+  const successScale = useRef(new Animated.Value(0)).current;
+  const successOpacity = useRef(new Animated.Value(0)).current;
+
   const { addCalculation } = useCalculationStore();
   const { user } = useAuthStore();
+
+  // 保存成功アニメーション
+  const showSuccessAnimation = () => {
+    setShowSuccessModal(true);
+    successScale.setValue(0);
+    successOpacity.setValue(0);
+
+    Animated.parallel([
+      Animated.spring(successScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(successOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // 1.5秒後に自動で閉じる
+    setTimeout(() => {
+      Animated.timing(successOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => {
+        setShowSuccessModal(false);
+      });
+    }, 1500);
+  };
 
   // ローン計算の入力値
   const [propertyPrice, setPropertyPrice] = useState(DEFAULT_VALUES.propertyPrice);
@@ -172,7 +211,7 @@ export default function LoanCalculatorScreen() {
       setShowSaveModal(false);
       setPropertyName('');
       setNote('');
-      Alert.alert('保存完了', '計算結果を保存しました');
+      showSuccessAnimation();
     } catch (error) {
       Alert.alert('エラー', '保存に失敗しました');
     }
@@ -180,10 +219,15 @@ export default function LoanCalculatorScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
       {/* ヘッダー */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Feather name="arrow-left" size={24} color={Colors.light.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>計算</Text>
         <View style={styles.headerButtons}>
@@ -565,6 +609,31 @@ export default function LoanCalculatorScreen() {
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* 保存成功モーダル */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="none"
+      >
+        <View style={styles.successModalOverlay}>
+          <Animated.View
+            style={[
+              styles.successModalContent,
+              {
+                opacity: successOpacity,
+                transform: [{ scale: successScale }],
+              },
+            ]}
+          >
+            <View style={styles.successIconContainer}>
+              <Feather name="check" size={48} color="#ffffff" />
+            </View>
+            <Text style={styles.successText}>保存しました</Text>
+          </Animated.View>
+        </View>
+      </Modal>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -654,6 +723,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -934,6 +1006,34 @@ const styles = StyleSheet.create({
     fontSize: Layout.fontSize.sm,
     color: Colors.light.textSecondary,
     lineHeight: 20,
+  },
+  // 成功モーダルスタイル
+  successModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successModalContent: {
+    backgroundColor: Colors.light.backgroundLight,
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    ...Layout.shadow.lg,
+  },
+  successIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.light.success,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  successText: {
+    fontSize: Layout.fontSize.title3,
+    fontWeight: Layout.fontWeight.semibold,
+    color: Colors.light.text,
   },
   conversionResult: {
     gap: Layout.spacing.sm,
