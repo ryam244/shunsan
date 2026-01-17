@@ -24,7 +24,7 @@ export default function HomeScreen() {
             Phase 1-1: 基本プロジェクト構築完了
           </Text>
           <Text style={styles.description}>
-            次のステップでSupabase接続と認証機能を追加します。
+            次のステップでFirebase接続と認証機能を追加します。
           </Text>
         </View>
 

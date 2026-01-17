@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, Text } from 'react-native';
 
 /**
  * Tabs Layout
@@ -80,8 +80,8 @@ function TabIcon({ name, color }: { name: string; color: string }) {
   };
 
   return (
-    <span style={{ fontSize: 24, color }}>
+    <Text style={{ fontSize: 24 }}>
       {iconMap[name] || '❓'}
-    </span>
+    </Text>
   );
 }
