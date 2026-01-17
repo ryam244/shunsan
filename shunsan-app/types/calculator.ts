@@ -6,6 +6,51 @@
 // 計算タブの種類
 export type CalculatorTab = 'loan' | 'expense' | 'unit';
 
+// ローン計算入力
+export interface LoanCalculationInput {
+  propertyPrice: number;    // 物件価格（万円）
+  downPayment: number;      // 頭金（万円）
+  interestRate: number;     // 金利（%）
+  loanTermYears: number;    // 借入期間（年）
+  bonusPayment: number;     // ボーナス払い（万円）
+  isNewConstruction: boolean; // 新築フラグ
+}
+
+// ローン計算結果
+export interface LoanCalculationResult {
+  monthlyPayment: number;   // 月々返済額（円）
+  totalPayment: number;     // 総支払額（円）
+  totalInterest: number;    // 総利息額（円）
+  loanAmount: number;       // 借入額（円）
+}
+
+// 諸経費計算結果
+export interface ExpenseCalculationResult {
+  total: number;
+  breakdown: {
+    brokerageFee: number;
+    registrationTax: number;
+    stampDuty: number;
+    judicialScrivenerFee: number;
+    loanFees: number;
+    fireInsurance: number;
+    acquisitionTax: number;
+  };
+}
+
+// 保存された計算
+export interface SavedCalculation {
+  id: string;
+  userId: string;
+  propertyName: string;     // 物件名（ユーザー入力）
+  input: LoanCalculationInput;
+  loanResult: LoanCalculationResult;
+  expenseResult: ExpenseCalculationResult;
+  createdAt: Date;
+  updatedAt: Date;
+  note?: string;            // メモ
+}
+
 // デフォルト値
 export const DEFAULT_VALUES = {
   // ローン計算

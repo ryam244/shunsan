@@ -12,11 +12,15 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Modal,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Button } from '@/components/ui/Button';
+import { useCalculationStore } from '@/store/calculationStore';
+import { useAuthStore } from '@/store/authStore';
 import {
   calculateLoan,
   calculateExpenses,
@@ -36,6 +40,12 @@ import {
 
 export default function LoanCalculatorScreen() {
   const [activeTab, setActiveTab] = useState<CalculatorTab>('loan');
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [propertyName, setPropertyName] = useState('');
+  const [note, setNote] = useState('');
+
+  const { addCalculation } = useCalculationStore();
+  const { user } = useAuthStore();
 
   // ローン計算の入力値
   const [propertyPrice, setPropertyPrice] = useState(DEFAULT_VALUES.propertyPrice);
@@ -91,6 +101,57 @@ export default function LoanCalculatorScreen() {
     });
   };
 
+  // 保存処理
+  const handleSave = async () => {
+    if (!propertyName.trim()) {
+      Alert.alert('エラー', '物件名を入力してください');
+      return;
+    }
+
+    const userId = user?.id || 'guest';
+
+    try {
+      await addCalculation(
+        userId,
+        propertyName.trim(),
+        {
+          propertyPrice,
+          downPayment,
+          interestRate,
+          loanTermYears,
+          bonusPayment,
+          isNewConstruction,
+        },
+        {
+          monthlyPayment: loanResult.monthlyPayment,
+          totalPayment: loanResult.totalPayment * 10000, // 万円→円
+          totalInterest: loanResult.totalInterest * 10000,
+          loanAmount: loanResult.loanAmount * 10000,
+        },
+        {
+          total: expenseResult.totalExpenses,
+          breakdown: {
+            brokerageFee: expenseResult.breakdown.find(b => b.name === '仲介手数料')?.amount || 0,
+            registrationTax: expenseResult.breakdown.find(b => b.name === '登録免許税')?.amount || 0,
+            stampDuty: expenseResult.breakdown.find(b => b.name === '印紙代')?.amount || 0,
+            judicialScrivenerFee: expenseResult.breakdown.find(b => b.name === '司法書士報酬')?.amount || 0,
+            loanFees: expenseResult.breakdown.find(b => b.name === 'ローン諸費用')?.amount || 0,
+            fireInsurance: expenseResult.breakdown.find(b => b.name === '火災保険')?.amount || 0,
+            acquisitionTax: expenseResult.breakdown.find(b => b.name === '不動産取得税')?.amount || 0,
+          },
+        },
+        note.trim() || undefined
+      );
+
+      setShowSaveModal(false);
+      setPropertyName('');
+      setNote('');
+      Alert.alert('保存完了', '計算結果を保存しました');
+    } catch (error) {
+      Alert.alert('エラー', '保存に失敗しました');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* ヘッダー */}
@@ -99,7 +160,20 @@ export default function LoanCalculatorScreen() {
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>計算</Text>
-        <View style={styles.headerRight} />
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            onPress={() => router.push('/calculation-history')}
+            style={styles.headerButton}
+          >
+            <Text style={styles.headerButtonText}>履歴</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowSaveModal(true)}
+            style={[styles.headerButton, styles.saveButton]}
+          >
+            <Text style={styles.saveButtonText}>保存</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* タブ */}
@@ -364,6 +438,68 @@ export default function LoanCalculatorScreen() {
           </View>
         )}
       </View>
+
+      {/* 保存モーダル */}
+      <Modal
+        visible={showSaveModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSaveModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>計算結果を保存</Text>
+
+            <View style={styles.modalInputGroup}>
+              <Text style={styles.modalLabel}>物件名 *</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={propertyName}
+                onChangeText={setPropertyName}
+                placeholder="例: 〇〇マンション 3LDK"
+                placeholderTextColor={Colors.light.textTertiary}
+              />
+            </View>
+
+            <View style={styles.modalInputGroup}>
+              <Text style={styles.modalLabel}>メモ（任意）</Text>
+              <TextInput
+                style={[styles.modalInput, styles.modalTextArea]}
+                value={note}
+                onChangeText={setNote}
+                placeholder="メモを入力..."
+                placeholderTextColor={Colors.light.textTertiary}
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+
+            <View style={styles.modalSummary}>
+              <Text style={styles.modalSummaryText}>
+                物件価格: {formatCurrency(propertyPrice)}万円
+              </Text>
+              <Text style={styles.modalSummaryText}>
+                月々返済: ¥{formatCurrency(loanResult.monthlyPayment)}
+              </Text>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowSaveModal(false)}
+              >
+                <Text style={styles.modalCancelText}>キャンセル</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleSave}
+              >
+                <Text style={styles.modalSaveText}>保存</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -437,8 +573,30 @@ const styles = StyleSheet.create({
     fontWeight: Layout.fontWeight.bold,
     color: Colors.light.text,
   },
-  headerRight: {
-    width: 40,
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.primary,
+  },
+  headerButtonText: {
+    fontSize: 13,
+    color: Colors.light.primary,
+    fontWeight: '600',
+  },
+  saveButton: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  saveButtonText: {
+    fontSize: 13,
+    color: '#ffffff',
+    fontWeight: '600',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -685,6 +843,90 @@ const styles = StyleSheet.create({
   resultSubValue: {
     fontSize: Layout.fontSize.md,
     fontWeight: Layout.fontWeight.bold,
+    color: '#ffffff',
+  },
+  // モーダルスタイル
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: Colors.light.background,
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.light.text,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalInputGroup: {
+    marginBottom: 16,
+  },
+  modalLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 8,
+  },
+  modalInput: {
+    backgroundColor: Colors.light.backgroundLight,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  modalTextArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  modalSummary: {
+    backgroundColor: Colors.light.backgroundLight,
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  modalSummaryText: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    marginBottom: 4,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.textSecondary,
+  },
+  modalSaveButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    backgroundColor: Colors.light.primary,
+    alignItems: 'center',
+  },
+  modalSaveText: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#ffffff',
   },
 });
