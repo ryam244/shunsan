@@ -47,49 +47,40 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        try {
-          // Firestoreからユーザーデータを取得
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        // ローカルユーザーオブジェクトを作成
+        const localUser: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          displayName: firebaseUser.displayName || undefined,
+          defaultInterestRate: 0.475,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
 
+        // まずローカルで認証状態を設定（Firestoreエラーでもログイン成功）
+        set({
+          user: localUser,
+          firebaseUser,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+
+        // Firestoreへの保存は非同期で試行（失敗してもOK）
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
-            set({
-              user: userData,
-              firebaseUser,
-              isAuthenticated: true,
-              isLoading: false,
-            });
+            set({ user: userData });
           } else {
-            // ユーザードキュメントがない場合は作成
-            const newUser: User = {
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || undefined,
-              defaultInterestRate: 0.475,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
-
             await setDoc(doc(db, 'users', firebaseUser.uid), {
-              ...newUser,
+              ...localUser,
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
             });
-
-            set({
-              user: newUser,
-              firebaseUser,
-              isAuthenticated: true,
-              isLoading: false,
-            });
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
-          set({
-            firebaseUser,
-            isAuthenticated: true,
-            isLoading: false,
-          });
+          console.warn('Firestore sync skipped:', error);
+          // Firestoreエラーは無視してローカルで続行
         }
       } else {
         set({
